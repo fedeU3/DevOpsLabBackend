@@ -22,7 +22,4 @@ export class CustomersEntity {
 
   @Column('bytea')
   imagen: Buffer;
-
-  //@OneToMany(() => PedidosEquiposEntity, (pedidoEquipo) => pedidoEquipo.equipo)
-  //pedidosEquipos: PedidosEquiposEntity[];
 }

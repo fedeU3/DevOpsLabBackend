@@ -1,6 +1,5 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post } from '@nestjs/common';
+import {Controller, Delete, Get, Param, ParseIntPipe, Post } from '@nestjs/common';
 import { CustomersService } from './customers.service';
-import { CreateCustomersDTO } from './DTO/CreateCustomersDTO';
 
 @Controller("customers")
 export class CustomersController {
