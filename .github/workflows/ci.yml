@@ -55,9 +55,9 @@ jobs:
       - name: SonarCloud Scan (Quality Gate enforced)
         uses: SonarSource/sonarcloud-github-action@v2
         env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_ORG: ${{ secrets.SONAR_ORG }}
-          SONAR_PROJECT_KEY: ${{ secrets.SONAR_PROJECT_KEY }}
+          SONAR_TOKEN: 2437fecdbaf96b60d8916cdcdaefd5a0a031718d
+          SONAR_ORG: fedeu3
+          SONAR_PROJECT_KEY: fedeU3_DevOpsLabBackend
 
   final:
     name: ✅ Final check (Lint + Sonar)
