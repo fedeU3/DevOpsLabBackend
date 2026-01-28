@@ -1,4 +1,4 @@
-name: CI - Backend
+name: SonarCloud
 
 on:
   push:
@@ -10,15 +10,19 @@ permissions:
   contents: read
   pull-requests: read
 
+concurrency:
+  group: sonar-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  lint_and_sonar:
+  sonar:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # recomendado para Sonar (historia/PR decoration)
+          fetch-depth: 0  # recomendado para PR decoration y mejor análisis
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -29,13 +33,6 @@ jobs:
       - name: Install deps
         run: npm ci
 
-      - name: Lint (fails on errors)
-        run: npm run lint
-
-      # (Opcional recomendado) tests si ya existen
-      # - name: Test
-      #   run: npm test -- --ci
-
       - name: SonarCloud Scan (Quality Gate enforced)
         uses: SonarSource/sonarcloud-github-action@v2
         env:
@@ -44,10 +41,3 @@ jobs:
           args: >
             -Dsonar.organization=${{ secrets.SONAR_ORG }}
             -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
-
-      # Ejemplo de “endurecer” SOLO en preproduccion/produccion:
-      # (esto no cambia el Gate de Sonar, pero te deja agregar checks extra)
-      - name: Extra checks for preproduccion/produccion (example)
-        if: github.ref == 'refs/heads/preproduccion' || github.ref == 'refs/heads/produccion'
-        run: |
-          echo "Aquí podrías exigir cosas extra (por ejemplo, npm run format:check o tests obligatorios)."
