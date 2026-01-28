@@ -1,4 +1,4 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity({name: 'Customers'})
 export class CustomersEntity {
@@ -22,4 +22,7 @@ export class CustomersEntity {
 
   @Column('bytea')
   imagen: Buffer;
+
+  //@OneToMany(() => PedidosEquiposEntity, (pedidoEquipo) => pedidoEquipo.equipo)
+  //pedidosEquipos: PedidosEquiposEntity[];
 }
