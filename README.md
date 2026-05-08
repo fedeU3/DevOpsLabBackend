@@ -1,100 +1,293 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# DevOpsLabBackend
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+[![CI Pipeline](https://github.com/fedeU3/DevOpsLabBackend/actions/workflows/ci.yml/badge.svg)](https://github.com/fedeU3/DevOpsLabBackend/actions/workflows/ci.yml)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=DevOpsLabBackend&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=DevOpsLabBackend)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=DevOpsLabBackend&metric=coverage)](https://sonarcloud.io/summary/new_code?id=DevOpsLabBackend)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![NestJS](https://img.shields.io/badge/NestJS-10.x-E0234E?logo=nestjs&logoColor=white)](https://nestjs.com/)
+[![Node.js](https://img.shields.io/badge/Node.js-20.x-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
+[![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+> A backend engineering sandbox for experimenting with modern DevOps tooling, CI/CD pipelines, static analysis, and development workflow automation. Built on NestJS and TypeScript — the application logic is intentionally minimal; the infrastructure and tooling are the product.
 
-## Description
+---
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Overview
 
-## Project setup
+**DevOpsLabBackend** is a controlled laboratory environment designed to explore, validate, and iterate on DevOps practices in a real backend codebase. Rather than being a feature-driven application, this repository treats the engineering workflow itself as the subject of experimentation.
+
+The stack is kept deliberately simple so that the focus remains on the surrounding infrastructure: how code is linted, tested, analyzed, containerized, and deployed — not what the code does at runtime.
+
+This is the kind of repository you build when you want to answer questions like:
+
+- *How does SonarQube behave when integrated into a GitHub Actions pipeline?*
+- *What does a clean ESLint + Prettier configuration look like on a TypeScript monolayer?*
+- *How do you structure a Docker workflow for local development vs. CI environments?*
+
+---
+
+## Purpose
+
+This repository exists to serve as a **living reference implementation** for backend DevOps practices. Specific objectives:
+
+- Evaluate and iterate on CI/CD pipeline design using GitHub Actions
+- Integrate and tune static code analysis with SonarQube (SonarCloud)
+- Establish an opinionated ESLint configuration tailored for NestJS + TypeScript projects
+- Validate Dockerization strategies for backend services
+- Experiment with test coverage enforcement and quality gate thresholds
+- Document reusable workflow patterns that can be ported to production repositories
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Runtime | Node.js 20 (LTS) |
+| Framework | NestJS 10 |
+| Language | TypeScript 5 |
+| Containerization | Docker + Docker Compose |
+| CI/CD | GitHub Actions |
+| Static Analysis | SonarQube / SonarCloud |
+| Linting | ESLint (typescript-eslint) |
+| Formatting | Prettier |
+| Testing | Jest + Supertest |
+| Package Manager | npm |
+
+---
+
+## Features
+
+**CI/CD Pipeline**
+- Automated lint, build, and test execution on every push and pull request
+- Quality gate enforcement via SonarCloud integration
+- Coverage reports uploaded to SonarCloud on each pipeline run
+- Branch protection rules enforced through status checks
+
+**Static Analysis & Code Quality**
+- SonarQube project configured with custom quality gate thresholds
+- ESLint ruleset tuned for strict TypeScript and NestJS patterns
+- Prettier enforced in CI — formatting deviations break the build
+- Pre-commit hooks via Husky to catch issues before they reach the pipeline
+
+**Containerization**
+- Multi-stage Dockerfile optimized for image size
+- `docker-compose.yml` for local development parity
+- Environment variable management via `.env` with `.env.example` template
+
+**Testing**
+- Unit test suite with Jest
+- E2E test scaffold with Supertest
+- Coverage threshold enforced via Jest configuration
+- Coverage output wired into SonarCloud analysis
+
+---
+
+## Installation
+
+### Prerequisites
+
+- Node.js >= 20.x
+- npm >= 10.x
+- Docker and Docker Compose (optional, for containerized setup)
+
+### Local Setup
 
 ```bash
-$ npm install
+# Clone the repository
+git clone https://github.com/fedeU3/DevOpsLabBackend.git
+cd DevOpsLabBackend
+
+# Install dependencies
+npm install
+
+# Copy environment template
+cp .env.example .env
+
+# Start in development mode
+npm run start:dev
 ```
 
-## Compile and run the project
+### Docker Setup
 
 ```bash
-# development
-$ npm run start
+# Build and start with Docker Compose
+docker compose up --build
 
-# watch mode
-$ npm run start:dev
+# Run in detached mode
+docker compose up -d
 
-# production mode
-$ npm run start:prod
+# Tear down
+docker compose down
 ```
 
-## Run tests
+---
+
+## Usage
+
+Once running, the API is available at `http://localhost:3000`.
+
+The application exposes a minimal set of endpoints designed to give the CI/CD pipeline and quality tools something real to analyze, lint, and test — without introducing unnecessary business complexity.
 
 ```bash
-# unit tests
-$ npm run test
+# Health check
+curl http://localhost:3000/health
 
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+# API base
+curl http://localhost:3000/api
 ```
 
-## Deployment
+Swagger documentation (if enabled):
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+```
+http://localhost:3000/api/docs
+```
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+---
+
+## Available Scripts
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+# Development
+npm run start           # Start in production mode
+npm run start:dev       # Start with watch mode (hot reload)
+npm run start:debug     # Start with debug mode enabled
+
+# Build
+npm run build           # Compile TypeScript to dist/
+
+# Code Quality
+npm run lint            # Run ESLint across the codebase
+npm run lint:fix        # Run ESLint with auto-fix
+npm run format          # Apply Prettier formatting
+npm run format:check    # Check formatting without applying changes
+
+# Testing
+npm run test            # Run unit tests
+npm run test:watch      # Run tests in watch mode
+npm run test:cov        # Run tests with coverage report
+npm run test:e2e        # Run end-to-end tests
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+---
 
-## Resources
+## CI/CD and Quality Workflows
 
-Check out a few resources that may come in handy when working with NestJS:
+The pipeline is defined in `.github/workflows/` and is structured around three primary concerns:
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+### Pipeline Stages
 
-## Support
+```
+Push / Pull Request
+        │
+        ▼
+┌───────────────┐
+│   Lint + Format│  ← ESLint, Prettier check
+└───────┬───────┘
+        │
+        ▼
+┌───────────────┐
+│     Build     │  ← tsc compilation
+└───────┬───────┘
+        │
+        ▼
+┌───────────────┐
+│  Test + Cover │  ← Jest, coverage report
+└───────┬───────┘
+        │
+        ▼
+┌───────────────┐
+│ SonarCloud    │  ← Static analysis, quality gate
+│ Analysis      │
+└───────────────┘
+```
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+### Quality Gate Configuration
 
-## Stay in touch
+SonarCloud is configured to enforce the following thresholds (adjustable via `sonar-project.properties`):
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+| Metric | Threshold |
+|---|---|
+| Coverage on new code | ≥ 80% |
+| Duplicated lines on new code | ≤ 3% |
+| Maintainability rating | A |
+| Reliability rating | A |
+| Security rating | A |
+
+### Workflow Files
+
+| File | Purpose |
+|---|---|
+| `.github/workflows/ci.yml` | Main CI pipeline (lint → build → test → analyze) |
+| `sonar-project.properties` | SonarCloud project configuration |
+| `.eslintrc.js` | ESLint ruleset |
+| `.prettierrc` | Prettier configuration |
+| `jest.config.ts` | Jest and coverage configuration |
+
+---
+
+## Future Experiments
+
+Planned iterations and areas of exploration:
+
+- [ ] **Semantic Release** — Automate versioning and changelog generation from conventional commits
+- [ ] **OWASP Dependency Check** — Integrate vulnerability scanning into the CI pipeline
+- [ ] **Trivy** — Container image scanning in the Docker build stage
+- [ ] **Kubernetes manifests** — Deploy the service to a local k8s cluster (minikube / kind)
+- [ ] **Helm chart** — Package the application for Helm-based deployments
+- [ ] **OpenTelemetry** — Instrument the app with distributed tracing
+- [ ] **GitHub Environments** — Introduce staging/production environment gates in the pipeline
+- [ ] **Renovate Bot** — Automate dependency updates via pull requests
+- [ ] **Commitlint** — Enforce conventional commit format in CI
+
+---
+
+## Repository Philosophy
+
+This repository operates on a few core principles:
+
+**Tooling over features.** The application's runtime behavior is secondary. What matters here is how the codebase is built, validated, and shipped.
+
+**Reproducibility.** Any developer cloning this repository should be able to bring up a fully working local environment and passing CI pipeline with minimal configuration.
+
+**Incremental complexity.** Each experiment is introduced in isolation so its impact can be measured clearly. No big-bang changes.
+
+**Documentation as a deliverable.** Workflow decisions are documented here — not just in code comments. The README is part of the engineering artifact.
+
+---
+
+## Project Structure
+
+```
+DevOpsLabBackend/
+├── .github/
+│   └── workflows/          # GitHub Actions pipeline definitions
+├── src/
+│   ├── app.module.ts
+│   ├── app.controller.ts
+│   ├── app.service.ts
+│   └── main.ts
+├── test/
+│   └── app.e2e-spec.ts     # End-to-end test suite
+├── .eslintrc.js
+├── .prettierrc
+├── docker-compose.yml
+├── Dockerfile
+├── jest.config.ts
+├── sonar-project.properties
+├── tsconfig.json
+└── tsconfig.build.json
+```
+
+---
 
 ## License
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+Distributed under the MIT License. See [`LICENSE`](./LICENSE) for details.
 
-## Cambios al readme
+---
+
+<p align="center">
+  Built as an engineering laboratory — not a product. Contributions, suggestions, and forks are welcome.
+</p>
