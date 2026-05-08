@@ -1,13 +1,9 @@
 # DevOpsLabBackend
 
-[![CI Pipeline](https://github.com/fedeU3/DevOpsLabBackend/actions/workflows/ci.yml/badge.svg)](https://github.com/fedeU3/DevOpsLabBackend/actions/workflows/ci.yml)
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=DevOpsLabBackend&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=DevOpsLabBackend)
-[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=DevOpsLabBackend&metric=coverage)](https://sonarcloud.io/summary/new_code?id=DevOpsLabBackend)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![NestJS](https://img.shields.io/badge/NestJS-10.x-E0234E?logo=nestjs&logoColor=white)](https://nestjs.com/)
 [![Node.js](https://img.shields.io/badge/Node.js-20.x-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
 [![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
 > A backend engineering sandbox for experimenting with modern DevOps tooling, CI/CD pipelines, static analysis, and development workflow automation. Built on NestJS and TypeScript — the application logic is intentionally minimal; the infrastructure and tooling are the product.
 
