@@ -33,7 +33,7 @@ jobs:
   lint:
     name: Lint
     # Maquina virtual Linux que presta GitHub para correr este job.
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       # Baja el codigo del repo en la maquina virtual.
       - uses: actions/checkout@v7
@@ -51,7 +51,7 @@ jobs:
 
   sonar:
     name: SonarCloud
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
         with:
@@ -88,7 +88,7 @@ jobs:
   # en la proteccion de ramas de GitHub.
   final:
     name: ✅ Final check (Lint + Sonar)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: [lint, sonar]
     # always(): corre aunque lint o sonar hayan fallado, para informar cual fue.
     if: ${{ always() }}
@@ -116,7 +116,7 @@ jobs:
 
   build:
     name: Build y push a GHCR
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # Solo despues de que lint y sonar pasaron.
     needs: [lint, sonar]
     # Solo en un push (no en PR) a preprod o prod.
@@ -168,7 +168,7 @@ jobs:
 
   deploy:
     name: Deploy al VPS
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: [build]
     # GitHub Environment del que salen los secretos: preprod usa "staging", prod usa
     # "production". Asi cada rama solo puede leer los secretos de su ambiente.
