@@ -36,10 +36,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # Baja el codigo del repo en la maquina virtual.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # Instala Node 22 (el mismo de la imagen Docker) y cachea la carpeta de npm.
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -53,12 +53,12 @@ jobs:
     name: SonarCloud
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           # Historial completo: Sonar lo usa para saber que codigo es nuevo.
           fetch-depth: 0
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -126,7 +126,7 @@ jobs:
       # Permiso para subir imagenes al GitHub Container Registry con GITHUB_TOKEN.
       packages: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # GHCR exige el nombre en minusculas; el usuario de GitHub puede tener mayusculas.
       # ${VAR,,} es la forma de bash de pasar a minusculas. Lo guarda en IMAGE para los
@@ -135,17 +135,17 @@ jobs:
         run: echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/clerkiva-backend" >> "$GITHUB_ENV"
 
       # Inicia sesion en GHCR con el token automatico del workflow (no hace falta crear uno).
-      - uses: docker/login-action@v3
+      - uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       # Buildx: el motor de build de Docker. Hace falta para la cache de abajo.
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@v4
 
       # El equivalente a "docker build" + "docker push".
-      - uses: docker/build-push-action@v6
+      - uses: docker/build-push-action@v7
         with:
           # Contexto = raiz del repo (lo que ven los COPY); usa el Dockerfile de la raiz.
           context: .
@@ -184,7 +184,7 @@ jobs:
       VPS_USER: ${{ secrets.VPS_USER }}
     steps:
       # Hace falta para copiar compose.yml al VPS.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # Prepara SSH en la maquina de GitHub: la clave privada para entrar al VPS y la
       # huella del VPS (known_hosts), para no conectarse a un servidor que se haga pasar
