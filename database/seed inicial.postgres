@@ -1,0 +1,48 @@
+-- Ya mapeadas en el código (si todavía no existen)
+CREATE TABLE "Provincias" (
+  "IdProvincia" SERIAL PRIMARY KEY,
+  "Provincia"   VARCHAR(20) NOT NULL
+);
+
+CREATE TABLE "Localidades" (
+  "IdLocalidad" SERIAL PRIMARY KEY,
+  "Localidad"   VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE "Usuarios" (
+  "IdUsuario"   SERIAL PRIMARY KEY,
+  "IdLocalidad" INT NOT NULL REFERENCES "Localidades"("IdLocalidad"),
+  "IdProvincia" INT NOT NULL REFERENCES "Provincias"("IdProvincia"),
+  "Usuario"     VARCHAR(30)  NOT NULL UNIQUE,
+  "Password"    CHAR(60)     NOT NULL,
+  "Token"       VARCHAR(512),             -- nullable: se completa recién en el login
+  "Estado"      CHAR(1)      NOT NULL DEFAULT 'A',
+  "Nombres"     VARCHAR(30)  NOT NULL,
+  "Apellidos"   VARCHAR(30)  NOT NULL,
+  "Telefono"    VARCHAR(20)  NOT NULL,
+  "DNI"         CHAR(8)      NOT NULL,
+  "CUIL"        CHAR(11)     NOT NULL,
+  "Email"       VARCHAR(120) NOT NULL,
+  "FechaAlta"   DATE         NOT NULL,
+  "Calle"       VARCHAR(120) NOT NULL
+);
+
+-- Nuevas
+CREATE TABLE "Servicios" (
+  "IdServicio" SERIAL PRIMARY KEY,
+  "Servicio"   VARCHAR(60)    NOT NULL,
+  "Duracion"   INT            NOT NULL CHECK ("Duracion" > 0),   -- minutos
+  "Precio"     DECIMAL(15, 2) NOT NULL CHECK ("Precio" >= 0),
+  "Estado"     CHAR(1)        NOT NULL DEFAULT 'A' CHECK ("Estado" IN ('A', 'B'))
+);
+
+CREATE TABLE "Turnos" (
+  "IdTurno"    SERIAL PRIMARY KEY,
+  "IdUsuario"  INT       NOT NULL REFERENCES "Usuarios"("IdUsuario"),
+  "IdServicio" INT       NOT NULL REFERENCES "Servicios"("IdServicio"),
+  "Fecha"      TIMESTAMP NOT NULL,       -- inicio; el fin = Fecha + Duracion del servicio
+  "Estado"     CHAR(1)   NOT NULL DEFAULT 'P' CHECK ("Estado" IN ('P', 'A', 'C'))
+);
+
+-- Acelera la búsqueda de superposición y de horarios ocupados
+CREATE INDEX "IX_Turnos_Servicio_Fecha" ON "Turnos" ("IdServicio", "Fecha");

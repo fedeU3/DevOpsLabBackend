@@ -1,0 +1,13 @@
+# Se generan adentro de la imagen; los locales son de macOS y no sirven en Linux
+node_modules
+dist
+
+# Secretos: se pasan al correr el contenedor, nunca quedan dentro de la imagen
+.env
+.env.*
+
+.git
+.claude
+coverage
+*.log
+.DS_Store

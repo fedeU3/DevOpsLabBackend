@@ -1,0 +1,56 @@
+# Compose de los servidores (staging y produccion). No se usa para desarrollar en la Mac.
+#
+# El workflow de CI/CD copia este archivo al VPS, a /opt/clerkiva/staging/compose.yml o a
+# /opt/clerkiva/production/compose.yml, junto con un .env propio de cada ambiente. Es el
+# mismo archivo para los dos: lo unico que cambia entre ambientes es el .env de al lado.
+#
+# Docker Compose lee solo el .env de su carpeta para reemplazar los ${...} de abajo.
+# Las variables IMAGE_TAG, GHCR_OWNER y HTTP_PORT las agrega el workflow al final de ese .env.
+
+# Nombre del proyecto: "clerkiva-preprod" o "clerkiva-prod". Separa los contenedores, la
+# red y los nombres de los dos ambientes aunque corran en el mismo VPS.
+name: clerkiva-${IMAGE_TAG}
+
+services:
+
+  # ---------- API NestJS ----------
+  backend:
+    # Imagen que construye el workflow del repo backend y sube a GHCR.
+    # IMAGE_TAG es la rama: "preprod" en staging, "prod" en produccion.
+    image: ghcr.io/${GHCR_OWNER}/clerkiva-backend:${IMAGE_TAG}
+
+    # Si el contenedor se cae o el VPS se reinicia, Docker lo vuelve a levantar.
+    # Solo queda apagado si alguien lo frena a mano (docker compose stop).
+    restart: unless-stopped
+
+    # Carga TODAS las variables del .env del ambiente adentro del contenedor:
+    # DATABASE_URL, JWT_SECRET, MP_ACCESS_TOKEN, etc. Staging y produccion tienen cada uno
+    # su .env, asi que staging nunca ve la base ni los tokens de produccion.
+    env_file: .env
+
+    environment:
+      # Pisa el PORT del .env: adentro del contenedor la API siempre escucha en el 3001,
+      # que es a donde le pega el nginx del frontend (nginx.conf del repo frontend).
+      PORT: "3001"
+
+    # Sin "ports": el backend no se publica afuera del VPS. Solo lo alcanza el frontend
+    # por la red interna que Compose arma entre los servicios de este archivo.
+
+  # ---------- Frontend React servido por nginx ----------
+  frontend:
+    # Imagen que construye el workflow del repo frontend. Misma imagen para los dos
+    # ambientes: llama a /api y su nginx la reenvia al servicio "backend" de arriba.
+    image: ghcr.io/${GHCR_OWNER}/clerkiva-frontend:${IMAGE_TAG}
+
+    restart: unless-stopped
+
+    ports:
+      # "IP_del_VPS:puerto_del_VPS:puerto_del_contenedor". Se publica solo en 127.0.0.1:
+      # desde internet no se llega, aunque el firewall este abierto (los puertos que
+      # publica Docker se saltean ufw). Se entra por un tunel SSH o, mas adelante, por
+      # Tailscale. HTTP_PORT tiene que ser distinto en cada ambiente (ej. 8081 y 8080).
+      - "127.0.0.1:${HTTP_PORT}:80"
+
+    # En el primer "up" arranca el backend antes que el frontend.
+    depends_on:
+      - backend

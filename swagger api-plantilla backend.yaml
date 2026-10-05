@@ -1,0 +1,1073 @@
+openapi: 3.0.3
+info:
+  title: Clerkiva API
+  description: API for Clerkiva backend services.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3001
+    description: Local development server
+
+components:
+  schemas:
+    StatusUnprocessableEntityError:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Mensaje de error
+    ErrorResponse:
+      type: object
+      properties:
+        statusCode:
+          type: integer
+          example: 404
+        message:
+          type: string
+          example: "Recurso no encontrado"
+        error:
+          type: string
+          example: "Not Found"
+
+    Servicio:
+      type: object
+      properties:
+        idServicio:
+          type: integer
+          example: 1
+        servicio:
+          type: string
+          maxLength: 60
+          example: "Corte de pelo"
+        duracion:
+          type: integer
+          description: Duración del turno en minutos
+          example: 30
+        precio:
+          type: number
+          example: 8000
+        estado:
+          type: string
+          description: Estado del servicio (A=Activo, B=Baja)
+          enum: [A, B]
+          example: "A"
+    ServicioInput:
+      type: object
+      required:
+        - servicio
+        - duracion
+        - precio
+      properties:
+        servicio:
+          type: string
+          maxLength: 60
+          example: "Corte de pelo"
+        duracion:
+          type: integer
+          description: Duración del turno en minutos
+          example: 30
+        precio:
+          type: number
+          example: 8000
+        estado:
+          type: string
+          description: Si no se envía, se guarda como A
+          enum: [A, B]
+          example: "A"
+    Turno:
+      type: object
+      properties:
+        idTurno:
+          type: integer
+          example: 10
+        idUsuario:
+          type: integer
+          example: 1
+        idServicio:
+          type: integer
+          example: 1
+        fecha:
+          type: string
+          description: Fecha y hora de inicio. El fin se calcula con la duración del servicio.
+          example: "2026-10-10T18:00:00"
+        estado:
+          type: string
+          description: Estado del turno (P=Pendiente, A=Atendido, C=Cancelado)
+          enum: [P, A, C]
+          example: "P"
+    TurnoInput:
+      type: object
+      required:
+        - idUsuario
+        - idServicio
+        - fecha
+      properties:
+        idUsuario:
+          type: integer
+          example: 1
+        idServicio:
+          type: integer
+          example: 1
+        fecha:
+          type: string
+          example: "2026-10-10T18:00:00"
+        estado:
+          type: string
+          description: Si no se envía, se guarda como P
+          enum: [P, A, C]
+          example: "P"
+
+paths:
+  /auth:
+    get:
+      tags:
+        - Auth
+      summary: Obtener usuario autenticado
+      description: Devuelve la información del usuario dueño del JWT. Requiere token válido en el header Authorization.
+      operationId: getAuth
+      parameters:
+        - in: header
+          name: Authorization
+          schema:
+            type: string
+          required: true
+          description: Token de acceso obtenido al iniciar sesión. Debe ser enviado en el formato "Bearer {token}"
+      responses:
+        "200":
+          description: Datos del usuario autenticado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  idUsuario:
+                    type: integer
+                    description: ID del usuario autenticado
+                    example: 1
+                  usuario:
+                    type: string
+                    description: Nombre de usuario del usuario autenticado
+                    example: "feder"
+        "401":
+          description: Token inválido o no enviado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 401
+                  message:
+                    type: string
+                    example: "Unauthorized"
+  /auth/login:
+    post:
+      tags:
+        - Auth
+      summary: Iniciar sesión. Ingresar Usuario y contraseña y devuelve Token
+      description: Autentica al usuario con su usuario y contraseña. Devuelve un JWT que debe usarse en los endpoints protegidos.
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                usuario:
+                  type: string
+                  description: Nombre de usuario del usuario que intenta iniciar sesión
+                  example: "admin"
+                password:
+                  type: string
+                  description: Contraseña del usuario que intenta iniciar sesión
+                  example: "admin12345"
+      responses:
+        "200":
+          description: Login exitoso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: Token de acceso
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkFkbWluIiwiaWF0IjoxNT"
+        "400":
+          description: Datos de entrada inválidos (validación fallida)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 400
+                  message:
+                    type: string
+                    example: "Invalid input"
+        "401":
+          description: Contraseña incorrecta, o usuario dado de baja (estado distinto de 'A')
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 401
+                  message:
+                    type: string
+                    example: "Invalid credentials"
+        "404":
+          description: Usuario no encontrado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 404
+                  message:
+                    type: string
+                    example: "User not found"
+  /usuarios:
+    post:
+      tags:
+        - Usuarios
+      summary: Alta de nuevo usuario
+      description: >
+        Crea un nuevo usuario con su información personal y de acceso.
+        La fechaAlta es asignada automáticamente por el servidor.
+      operationId: createUsuario
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - usuario
+                - password
+                - estado
+                - nombres
+                - apellidos
+                - telefono
+                - dni
+                - cuil
+                - email
+                - calle
+                - idLocalidad
+                - idProvincia
+              properties:
+                usuario:
+                  type: string
+                  description: Nombre de usuario (login)
+                  maxLength: 30
+                  example: "jperez"
+                password:
+                  type: string
+                  description: Contraseña del usuario
+                  maxLength: 10
+                  example: "Pass1234"
+                estado:
+                  type: string
+                  description: Estado del usuario (A=Activo, I=Inactivo)
+                  enum: [A, I]
+                  example: "A"
+                nombres:
+                  type: string
+                  description: Nombres del usuario
+                  maxLength: 30
+                  example: "Juan"
+                apellidos:
+                  type: string
+                  description: Apellidos del usuario
+                  maxLength: 30
+                  example: "Pérez"
+                telefono:
+                  type: string
+                  description: Teléfono de contacto
+                  maxLength: 20
+                  example: "3815001234"
+                dni:
+                  type: string
+                  description: DNI del usuario (8 dígitos)
+                  maxLength: 8
+                  example: "38123456"
+                cuil:
+                  type: string
+                  description: CUIL del usuario (11 dígitos)
+                  maxLength: 11
+                  example: "20381234567"
+                email:
+                  type: string
+                  description: Email del usuario
+                  maxLength: 120
+                  example: "jperez@email.com"
+                calle:
+                  type: string
+                  description: Dirección del usuario
+                  maxLength: 120
+                  example: "Av. Siempre Viva 742"
+                idLocalidad:
+                  type: integer
+                  description: ID de la localidad del usuario
+                  example: 1
+                idProvincia:
+                  type: integer
+                  description: ID de la provincia del usuario
+                  example: 1
+      responses:
+        "201":
+          description: Usuario creado exitosamente. Devuelve el objeto usuario guardado.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  idUsuario:
+                    type: integer
+                    example: 42
+                  usuario:
+                    type: string
+                    example: "jperez"
+                  estado:
+                    type: string
+                    example: "A"
+                  nombres:
+                    type: string
+                    example: "Juan"
+                  apellidos:
+                    type: string
+                    example: "Pérez"
+                  telefono:
+                    type: string
+                    example: "3815001234"
+                  dni:
+                    type: string
+                    example: "38123456"
+                  cuil:
+                    type: string
+                    example: "20381234567"
+                  email:
+                    type: string
+                    example: "jperez@email.com"
+                  fechaAlta:
+                    type: string
+                    format: date
+                    example: "2026-02-24"
+                  calle:
+                    type: string
+                    example: "Av. Siempre Viva 742"
+                  idLocalidad:
+                    type: integer
+                    example: 1
+                  idProvincia:
+                    type: integer
+                    example: 1
+        "400":
+          description: Entrada inválida
+    get:
+      tags:
+        - Usuarios
+      summary: Obtener todos los usuarios
+      description: Retorna la lista completa de usuarios del sistema
+      operationId: getAllUsuarios
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    idUsuario:
+                      type: integer
+                      example: 1
+                    idLocalidad:
+                      type: integer
+                      example: 5
+                    idProvincia:
+                      type: integer
+                      example: 3
+                    usuario:
+                      type: string
+                      example: "jperez"
+                    estado:
+                      type: string
+                      example: "A"
+                    nombres:
+                      type: string
+                      example: "Juan"
+                    apellidos:
+                      type: string
+                      example: "Pérez"
+                    telefono:
+                      type: string
+                      example: "2235551234"
+                    dni:
+                      type: string
+                      example: "35123456"
+                    cuil:
+                      type: string
+                      example: "20351234567"
+                    email:
+                      type: string
+                      example: "jperez@clerkiva.com"
+                    fechaAlta:
+                      type: string
+                      format: date
+                      example: "2024-01-15"
+                    calle:
+                      type: string
+                      example: "Av. Colón 1234"
+  /usuarios/{id}/password:
+    patch:
+      tags:
+        - Usuarios
+      summary: Cambiar contraseña de un usuario
+      description: >
+        Permite que un usuario cambie su contraseña verificando primero la contraseña actual.
+        Devuelve 401 si la contraseña actual no coincide, y 404 si el usuario no existe.
+      operationId: changePassword
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            format: int32
+          description: ID del usuario
+          example: 5
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - passwordActual
+                - passwordNueva
+              properties:
+                passwordActual:
+                  type: string
+                  description: Contraseña actual del usuario
+                  example: "Pass1234"
+                passwordNueva:
+                  type: string
+                  description: Nueva contraseña que reemplazará a la actual
+                  example: "NuevaPass5678"
+      responses:
+        "200":
+          description: Contraseña actualizada exitosamente
+        "401":
+          description: La contraseña actual es incorrecta
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                statusCode: 401
+                message: "La contraseña actual es incorrecta"
+                error: "Unauthorized"
+        "404":
+          description: Usuario no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                statusCode: 404
+                message: "Usuario con id 5 no encontrado"
+                error: "Not Found"
+  /servicios:
+    get:
+      tags:
+        - Servicios
+      summary: Obtener todos los servicios
+      description: Devuelve todos los servicios (activos y dados de baja) ordenados por nombre
+      operationId: getAllServicios
+      responses:
+        "200":
+          description: Listado de servicios
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Servicio"
+    post:
+      tags:
+        - Servicios
+      summary: Alta de servicio
+      operationId: createServicio
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ServicioInput"
+      responses:
+        "201":
+          description: Servicio creado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Servicio"
+  /servicios/nombre/{nombre}:
+    get:
+      tags:
+        - Servicios
+      summary: Buscar servicios activos por nombre
+      description: Devuelve los servicios activos cuyo nombre contiene el texto (sin distinguir mayúsculas), del más barato al más caro. No incluye el campo estado.
+      operationId: getServiciosByNombre
+      parameters:
+        - in: path
+          name: nombre
+          required: true
+          schema:
+            type: string
+          example: "corte"
+      responses:
+        "200":
+          description: Servicios encontrados (puede ser un array vacío)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Servicio"
+  /servicios/{id}:
+    get:
+      tags:
+        - Servicios
+      summary: Obtener un servicio
+      operationId: getServicioById
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: ID del servicio
+          example: 1
+      responses:
+        "200":
+          description: Servicio encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Servicio"
+        "404":
+          description: Servicio no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                statusCode: 404
+                message: "El Servicio 1 no fue encontrado"
+                error: "Not Found"
+    put:
+      tags:
+        - Servicios
+      summary: Reemplazar un servicio
+      description: Reemplaza todos los campos del servicio
+      operationId: replaceServicio
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: ID del servicio
+          example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ServicioInput"
+      responses:
+        "200":
+          description: Servicio actualizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Servicio"
+        "404":
+          description: Servicio no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                statusCode: 404
+                message: "El Servicio 1 no fue encontrado"
+                error: "Not Found"
+    patch:
+      tags:
+        - Servicios
+      summary: Modificar parcialmente un servicio
+      description: Modifica solo los campos enviados
+      operationId: updateServicio
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: ID del servicio
+          example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                servicio:
+                  type: string
+                duracion:
+                  type: integer
+                precio:
+                  type: number
+                estado:
+                  type: string
+                  enum: [A, B]
+            example:
+              precio: 9500
+      responses:
+        "200":
+          description: Servicio actualizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Servicio"
+        "404":
+          description: Servicio no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                statusCode: 404
+                message: "El Servicio 1 no fue encontrado"
+                error: "Not Found"
+    delete:
+      tags:
+        - Servicios
+      summary: Dar de baja un servicio
+      description: Baja lógica, pasa el estado a B. El servicio no se borra porque puede tener turnos asociados.
+      operationId: deleteServicio
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: ID del servicio
+          example: 1
+      responses:
+        "200":
+          description: Servicio dado de baja
+        "404":
+          description: Servicio no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                statusCode: 404
+                message: "El Servicio 1 no fue encontrado"
+                error: "Not Found"
+  /turnos:
+    get:
+      tags:
+        - Turnos
+      summary: Obtener turnos
+      description: Devuelve todos los turnos con su servicio, ordenados por fecha. Si se envía idServicio, filtra por ese servicio.
+      operationId: getAllTurnos
+      parameters:
+        - in: query
+          name: idServicio
+          required: false
+          schema:
+            type: integer
+          example: 1
+      responses:
+        "200":
+          description: Listado de turnos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  allOf:
+                    - $ref: "#/components/schemas/Turno"
+                    - type: object
+                      properties:
+                        servicio:
+                          $ref: "#/components/schemas/Servicio"
+        "404":
+          description: Servicio no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                statusCode: 404
+                message: "El Servicio 1 no fue encontrado"
+                error: "Not Found"
+    post:
+      tags:
+        - Turnos
+      summary: Alta de turno
+      description: Crea un turno. Controla que el usuario y el servicio existan, que el servicio esté activo y que el horario no se superponga con otro turno no cancelado del mismo servicio.
+      operationId: createTurno
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TurnoInput"
+      responses:
+        "201":
+          description: Turno creado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Turno"
+        "400":
+          description: Fecha o estado inválidos, o el servicio está dado de baja
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                statusCode: 400
+                message: "La fecha no es valida"
+                error: "Bad Request"
+        "404":
+          description: Turno, servicio o usuario no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                statusCode: 404
+                message: "El Turno 10 no fue encontrado"
+                error: "Not Found"
+        "409":
+          description: El horario se superpone con otro turno del mismo servicio
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                statusCode: 409
+                message: "El horario se superpone con el Turno 7"
+                error: "Conflict"
+  /turnos/resumen:
+    get:
+      tags:
+        - Turnos
+      summary: Resumen de turnos por franja horaria
+      description: >
+        Devuelve la cantidad de turnos y los ingresos entre dos fechas (inclusive), sin contar los cancelados,
+        agrupados en Mañana (antes de las 12), Tarde (antes de las 19) y Noche.
+        Solo aparecen las franjas que tienen turnos.
+      operationId: getResumenTurnos
+      parameters:
+        - in: query
+          name: desde
+          required: true
+          schema:
+            type: string
+            format: date
+          example: "2026-10-01"
+        - in: query
+          name: hasta
+          required: true
+          schema:
+            type: string
+            format: date
+          example: "2026-10-31"
+      responses:
+        "200":
+          description: Resumen por franja
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    franja:
+                      type: string
+                      enum: [Mañana, Tarde, Noche]
+                      example: "Tarde"
+                    cantidad:
+                      type: integer
+                      example: 12
+                    total:
+                      type: number
+                      example: 96000
+        "400":
+          description: Falta desde o hasta
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                statusCode: 400
+                message: "Debe indicar desde y hasta (YYYY-MM-DD)"
+                error: "Bad Request"
+  /turnos/ocupados/{idServicio}:
+    get:
+      tags:
+        - Turnos
+      summary: Horarios ocupados de un servicio en un día
+      description: Devuelve los turnos no cancelados del servicio en la fecha indicada, ordenados por hora
+      operationId: getHorariosOcupados
+      parameters:
+        - in: path
+          name: idServicio
+          required: true
+          schema:
+            type: integer
+          description: ID del servicio
+          example: 1
+        - in: query
+          name: fecha
+          required: true
+          schema:
+            type: string
+            format: date
+          example: "2026-10-10"
+      responses:
+        "200":
+          description: Horarios ocupados
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    idTurno:
+                      type: integer
+                      example: 10
+                    fecha:
+                      type: string
+                      example: "2026-10-10T18:00:00"
+        "400":
+          description: Falta la fecha
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                statusCode: 400
+                message: "Debe indicar la fecha (YYYY-MM-DD)"
+                error: "Bad Request"
+        "404":
+          description: Servicio no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                statusCode: 404
+                message: "El Servicio 1 no fue encontrado"
+                error: "Not Found"
+  /turnos/{id}:
+    get:
+      tags:
+        - Turnos
+      summary: Obtener un turno
+      operationId: getTurnoById
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: ID del turno
+          example: 10
+      responses:
+        "200":
+          description: Turno encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Turno"
+        "404":
+          description: Turno no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                statusCode: 404
+                message: "El Turno 10 no fue encontrado"
+                error: "Not Found"
+    put:
+      tags:
+        - Turnos
+      summary: Reemplazar un turno
+      description: Reemplaza todos los campos del turno, con las mismas validaciones que el alta
+      operationId: replaceTurno
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: ID del turno
+          example: 10
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TurnoInput"
+      responses:
+        "200":
+          description: Turno actualizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Turno"
+        "400":
+          description: Fecha o estado inválidos, o el servicio está dado de baja
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                statusCode: 400
+                message: "La fecha no es valida"
+                error: "Bad Request"
+        "404":
+          description: Turno, servicio o usuario no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                statusCode: 404
+                message: "El Turno 10 no fue encontrado"
+                error: "Not Found"
+        "409":
+          description: El horario se superpone con otro turno del mismo servicio
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                statusCode: 409
+                message: "El horario se superpone con el Turno 7"
+                error: "Conflict"
+    patch:
+      tags:
+        - Turnos
+      summary: Modificar parcialmente un turno
+      description: Modifica solo los campos enviados, por ejemplo el estado para marcarlo atendido o cancelado
+      operationId: updateTurno
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: ID del turno
+          example: 10
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                idUsuario:
+                  type: integer
+                idServicio:
+                  type: integer
+                fecha:
+                  type: string
+                estado:
+                  type: string
+                  enum: [P, A, C]
+            example:
+              estado: "A"
+      responses:
+        "200":
+          description: Turno actualizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Turno"
+        "400":
+          description: Fecha o estado inválidos, o el servicio está dado de baja
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                statusCode: 400
+                message: "La fecha no es valida"
+                error: "Bad Request"
+        "404":
+          description: Turno, servicio o usuario no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                statusCode: 404
+                message: "El Turno 10 no fue encontrado"
+                error: "Not Found"
+        "409":
+          description: El horario se superpone con otro turno del mismo servicio
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                statusCode: 409
+                message: "El horario se superpone con el Turno 7"
+                error: "Conflict"
+    delete:
+      tags:
+        - Turnos
+      summary: Eliminar un turno
+      description: Borra el turno de la tabla. Para conservarlo como historial usar PATCH con estado C.
+      operationId: deleteTurno
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: ID del turno
+          example: 10
+      responses:
+        "200":
+          description: Turno eliminado
+        "404":
+          description: Turno no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                statusCode: 404
+                message: "El Turno 10 no fue encontrado"
+                error: "Not Found"
