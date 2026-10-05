@@ -1,21 +1,37 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Put, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+  Put,
+  Query,
+} from '@nestjs/common';
 import { TurnosService } from './turnos.service';
 import { CreateTurnoDto } from './dto/create-turno.dto';
 import { UpdateTurnoDto } from './dto/update-turno.dto';
 
 @Controller('turnos')
 export class TurnosController {
-  constructor(private readonly turnosService: TurnosService) { }
+  constructor(private readonly turnosService: TurnosService) {}
 
   @Get()
   //Trae todos los turnos, si se pasa idServicio filtra por servicio
   getAll(@Query('idServicio') idServicio?: number) {
-    return this.turnosService.getAll(idServicio ? Number(idServicio) : undefined);
+    return this.turnosService.getAll(
+      idServicio ? Number(idServicio) : undefined,
+    );
   }
 
   // GET /turnos/resumen?desde=2026-10-01&hasta=2026-10-31
   @Get('resumen')
-  async getResumen(@Query('desde') desde: string, @Query('hasta') hasta: string) {
+  async getResumen(
+    @Query('desde') desde: string,
+    @Query('hasta') hasta: string,
+  ) {
     return this.turnosService.getResumen(desde, hasta);
   }
 
@@ -39,12 +55,18 @@ export class TurnosController {
   }
 
   @Put(':id')
-  async replace(@Param('id', ParseIntPipe) id: number, @Body() dto: CreateTurnoDto) {
+  async replace(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: CreateTurnoDto,
+  ) {
     return this.turnosService.replaceTurno(id, dto);
   }
 
   @Patch(':id')
-  async update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateTurnoDto) {
+  async update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateTurnoDto,
+  ) {
     return this.turnosService.updateTurno(id, dto);
   }
 

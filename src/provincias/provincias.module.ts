@@ -9,4 +9,4 @@ import { ProvinciasEntity } from './provincias.entity';
   controllers: [ProvinciasController],
   providers: [ProvinciasService],
 })
-export class ProvinciasModule { }
+export class ProvinciasModule {}

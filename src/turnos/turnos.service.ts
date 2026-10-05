@@ -1,4 +1,9 @@
-import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { And, DataSource, LessThan, MoreThan, Not, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TurnosEntity } from './turnos.entity';
@@ -19,13 +24,16 @@ export class TurnosService {
     private readonly serviciosService: ServiciosService,
     private readonly usuariosService: UsuariosService,
     private readonly dataSource: DataSource,
-  ) { }
+  ) {}
 
   // Trae todos los turnos, si se pasa idServicio filtra por servicio
   async getAll(idServicio?: number) {
     if (idServicio) {
       const servicio = await this.serviciosService.getById(idServicio);
-      if (!servicio) throw new NotFoundException(`El Servicio ${idServicio} no fue encontrado`);
+      if (!servicio)
+        throw new NotFoundException(
+          `El Servicio ${idServicio} no fue encontrado`,
+        );
     }
     return this.turnosRepository.find({
       where: idServicio ? { idServicio } : {},
@@ -36,14 +44,17 @@ export class TurnosService {
 
   // Busca el turno. Lanza NotFoundException si no existe.
   async buscarTurno(id: number): Promise<TurnosEntity> {
-    const turno = await this.turnosRepository.findOne({ where: { idTurno: id } });
+    const turno = await this.turnosRepository.findOne({
+      where: { idTurno: id },
+    });
     if (!turno) throw new NotFoundException(`El Turno ${id} no fue encontrado`);
     return turno;
   }
 
   // Dado un servicio y un dia (YYYY-MM-DD) devuelve los horarios ya tomados, sin contar los cancelados
   async getHorariosOcupados(idServicio: number, fecha: string) {
-    if (!fecha) throw new BadRequestException('Debe indicar la fecha (YYYY-MM-DD)');
+    if (!fecha)
+      throw new BadRequestException('Debe indicar la fecha (YYYY-MM-DD)');
     await this.serviciosService.buscarServicio(idServicio);
 
     return this.turnosRepository
@@ -60,9 +71,11 @@ export class TurnosService {
   // Resumen de turnos entre dos fechas (YYYY-MM-DD), sin contar los cancelados.
   // Devuelve cantidad de turnos e ingresos agrupados por franja horaria: Mañana, Tarde, Noche.
   async getResumen(desde: string, hasta: string) {
-    if (!desde || !hasta) throw new BadRequestException('Debe indicar desde y hasta (YYYY-MM-DD)');
+    if (!desde || !hasta)
+      throw new BadRequestException('Debe indicar desde y hasta (YYYY-MM-DD)');
 
-    const rows = await this.dataSource.createQueryBuilder()
+    const rows = await this.dataSource
+      .createQueryBuilder()
       .select('s.servicio', 'servicio')
       .addSelect('EXTRACT(HOUR FROM t.fecha)', 'hora')
       .addSelect('COUNT(t.idTurno)', 'cantidad')
@@ -74,7 +87,7 @@ export class TurnosService {
       .groupBy('s.servicio')
       .addGroupBy('EXTRACT(HOUR FROM t.fecha)')
       .orderBy('EXTRACT(HOUR FROM t.fecha)', 'ASC')
-      .getRawMany();
+      .getRawMany<{ hora: string; cantidad: string; total: string }>();
 
     // Agrupar en franjas: Mañana (antes de las 12), Tarde (antes de las 19), Noche
     const grouped: Record<string, { cantidad: number; total: number }> = {};
@@ -150,15 +163,24 @@ export class TurnosService {
       throw new BadRequestException('La fecha no es valida');
     }
     if (!ESTADOS_TURNO.includes(turno.estado)) {
-      throw new BadRequestException(`El estado debe ser uno de: ${ESTADOS_TURNO.join(', ')}`);
+      throw new BadRequestException(
+        `El estado debe ser uno de: ${ESTADOS_TURNO.join(', ')}`,
+      );
     }
 
     const usuario = await this.usuariosService.getById(turno.idUsuario);
-    if (!usuario) throw new NotFoundException(`El Usuario ${turno.idUsuario} no fue encontrado`);
+    if (!usuario)
+      throw new NotFoundException(
+        `El Usuario ${turno.idUsuario} no fue encontrado`,
+      );
 
-    const servicio = await this.serviciosService.buscarServicio(turno.idServicio);
+    const servicio = await this.serviciosService.buscarServicio(
+      turno.idServicio,
+    );
     if (servicio.estado !== 'A') {
-      throw new BadRequestException(`El Servicio ${turno.idServicio} esta dado de baja`);
+      throw new BadRequestException(
+        `El Servicio ${turno.idServicio} esta dado de baja`,
+      );
     }
 
     // Un turno cancelado no ocupa horario
@@ -180,7 +202,9 @@ export class TurnosService {
       },
     });
     if (superpuesto) {
-      throw new ConflictException(`El horario se superpone con el Turno ${superpuesto.idTurno}`);
+      throw new ConflictException(
+        `El horario se superpone con el Turno ${superpuesto.idTurno}`,
+      );
     }
   }
 }

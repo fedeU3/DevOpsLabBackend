@@ -1,18 +1,24 @@
-import { ConflictException, Injectable, NotFoundException, Request, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
-import { SignUpDTO } from './dto/signup.dto';
 import { LoginDTO } from './dto/login.dto';
 import { UsuariosService } from '../usuarios/usuarios.service';
+import { UsuariosEntity } from '../usuarios/usuarios.entity';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly usuariosService: UsuariosService,
-    private jwtService: JwtService
-  ) { }
-  getAuth(user) {
-    const { password, _id, ...result } = user;
+    private jwtService: JwtService,
+  ) {}
+  // Devuelve el usuario autenticado sin datos sensibles
+  getAuth(user: UsuariosEntity) {
+    const result: Partial<UsuariosEntity> = { ...user };
+    delete result.password;
     return result;
   }
 
@@ -40,7 +46,7 @@ export class AuthService {
     // Genera un token JWT para el usuario autenticado
     const token = this.jwtService.sign({
       id: existingUser.idUsuario,
-    })
+    });
 
     // Actualiza el token en la base de datos
     await this.usuariosService.updateToken(existingUser.idUsuario, token);

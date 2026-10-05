@@ -1,12 +1,19 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+} from '@nestjs/common';
 import { UsuariosService } from './usuarios.service';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 
-
-@Controller("usuarios")
+@Controller('usuarios')
 export class UsuariosController {
-  constructor(private readonly appService: UsuariosService) { }
+  constructor(private readonly appService: UsuariosService) {}
 
   @Get()
   getAll() {
@@ -27,7 +34,6 @@ export class UsuariosController {
   async createCustomer(@Body() createUsuarioDto: CreateUsuarioDto) {
     return this.appService.createUsuario(createUsuarioDto);
   }
-
 
   @Patch(':id/password')
   async changePassword(

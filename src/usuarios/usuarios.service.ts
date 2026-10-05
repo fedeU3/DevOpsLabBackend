@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { ILike, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -8,11 +12,10 @@ import { ChangePasswordDto } from './dto/change-password.dto';
 
 @Injectable()
 export class UsuariosService {
-
   constructor(
     @InjectRepository(UsuariosEntity)
     private readonly UsuariosRepository: Repository<UsuariosEntity>,
-  ) { }
+  ) {}
   getHello(): string {
     return 'Hello World!';
   }
@@ -21,11 +24,10 @@ export class UsuariosService {
     return this.UsuariosRepository.find();
   }
 
-
   getByName(nombre: string) {
     const equipo = this.UsuariosRepository.find({
       where: { nombres: ILike(`%${nombre}%`) },
-    })
+    });
 
     if (!nombre) {
       throw new NotFoundException(`Equipo con ID ${nombre} no encontrado`);
@@ -34,10 +36,10 @@ export class UsuariosService {
     return equipo;
   }
 
-  getByType(tipo: string) {
-    const equipo = this.UsuariosRepository.find({
+  async getByType(tipo: string) {
+    const equipo = await this.UsuariosRepository.find({
       //where: { tipo: ILike(`%${tipo}%`) },
-    })
+    });
 
     if (!equipo) {
       throw new NotFoundException(`Equipo con ID ${tipo} no encontrado`);
@@ -48,13 +50,13 @@ export class UsuariosService {
 
   getById(id: number) {
     return this.UsuariosRepository.findOne({
-      where: { idUsuario: id }
+      where: { idUsuario: id },
     });
   }
 
   getByUserName(usuario: string) {
     return this.UsuariosRepository.findOne({
-      where: { usuario }
+      where: { usuario },
     });
   }
 
@@ -83,18 +85,26 @@ export class UsuariosService {
   }
 
   async changePassword(id: number, dto: ChangePasswordDto): Promise<void> {
-    const usuario = await this.UsuariosRepository.findOne({ where: { idUsuario: id } });
+    const usuario = await this.UsuariosRepository.findOne({
+      where: { idUsuario: id },
+    });
     if (!usuario) {
       throw new NotFoundException(`Usuario con id ${id} no encontrado`);
     }
 
-    const passwordMatch = await bcrypt.compare(dto.passwordActual, usuario.password);
+    const passwordMatch = await bcrypt.compare(
+      dto.passwordActual,
+      usuario.password,
+    );
     if (!passwordMatch) {
       throw new UnauthorizedException('La contraseña actual es incorrecta');
     }
 
     const hashedPassword = await bcrypt.hash(dto.passwordNueva, 10);
-    await this.UsuariosRepository.update({ idUsuario: id }, { password: hashedPassword });
+    await this.UsuariosRepository.update(
+      { idUsuario: id },
+      { password: hashedPassword },
+    );
   }
 
   /*async deleteUsuario(id: number): Promise<void> {

@@ -11,12 +11,12 @@ describe('LocalidadesController', () => {
       providers: [LocalidadesService],
     }).compile();
 
-    localidadesController = app.get<LocalidadesController>(LocalidadesController);
+    localidadesController = app.get<LocalidadesController>(
+      LocalidadesController,
+    );
   });
 
-  describe('root', () => {
-    it('should return "Hello World!"', () => {
-      /* expect(localidadesController.getHello()).toBe('Hello World!'); */
-    });
+  it('should be defined', () => {
+    expect(localidadesController).toBeDefined();
   });
 });

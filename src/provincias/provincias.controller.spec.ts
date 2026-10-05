@@ -14,9 +14,7 @@ describe('ProvinciasController', () => {
     provinciasController = app.get<ProvinciasController>(ProvinciasController);
   });
 
-  describe('root', () => {
-    it('should return "Hello World!"', () => {
-      /*       expect(provinciasController.getHello()).toBe('Hello World!'); */
-    });
+  it('should be defined', () => {
+    expect(provinciasController).toBeDefined();
   });
 });

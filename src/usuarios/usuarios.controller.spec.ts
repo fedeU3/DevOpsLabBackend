@@ -13,7 +13,10 @@ describe('UsuariosController', () => {
       controllers: [UsuariosController],
       providers: [
         UsuariosService,
-        { provide: getRepositoryToken(UsuariosEntity), useValue: usuariosRepository },
+        {
+          provide: getRepositoryToken(UsuariosEntity),
+          useValue: usuariosRepository,
+        },
       ],
     }).compile();
 

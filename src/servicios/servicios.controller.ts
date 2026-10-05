@@ -1,11 +1,21 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Put } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+  Put,
+} from '@nestjs/common';
 import { ServiciosService } from './servicios.service';
 import { CreateServicioDto } from './dto/create-servicio.dto';
 import { UpdateServicioDto } from './dto/update-servicio.dto';
 
 @Controller('servicios')
 export class ServiciosController {
-  constructor(private readonly serviciosService: ServiciosService) { }
+  constructor(private readonly serviciosService: ServiciosService) {}
 
   @Get()
   getAll() {
@@ -28,12 +38,18 @@ export class ServiciosController {
   }
 
   @Put(':id')
-  async replace(@Param('id', ParseIntPipe) id: number, @Body() dto: CreateServicioDto) {
+  async replace(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: CreateServicioDto,
+  ) {
     return this.serviciosService.replaceServicio(id, dto);
   }
 
   @Patch(':id')
-  async update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateServicioDto) {
+  async update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateServicioDto,
+  ) {
     return this.serviciosService.updateServicio(id, dto);
   }
 

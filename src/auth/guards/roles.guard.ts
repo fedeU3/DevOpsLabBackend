@@ -1,10 +1,10 @@
-import { CanActivate, ExecutionContext } from "@nestjs/common";
-import { Reflector } from "@nestjs/core";
-import { Role } from "../enums/role.enum";
-import { ROLES_KEY } from "../decorators/roles.decorator";
+import { CanActivate, ExecutionContext } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+import { Role } from '../enums/role.enum';
+import { ROLES_KEY } from '../decorators/roles.decorator';
 
 export class RolesGuard implements CanActivate {
-  constructor(private reflector: Reflector) { }
+  constructor(private reflector: Reflector) {}
   canActivate(context: ExecutionContext): boolean {
     const requiredRoles = this.reflector.getAllAndOverride<Role[]>(ROLES_KEY, [
       context.getHandler(),
@@ -13,10 +13,12 @@ export class RolesGuard implements CanActivate {
 
     if (!requiredRoles) return true;
 
-    const { user } = context.switchToHttp().getRequest();
+    const { user } = context
+      .switchToHttp()
+      .getRequest<{ user: { rol?: { rol?: Role } } }>();
 
     if (user.rol?.rol === Role.ADMIN) return true;
 
-    return requiredRoles.includes(user.rol?.rol);
+    return !!user.rol?.rol && requiredRoles.includes(user.rol.rol);
   }
 }

@@ -7,8 +7,12 @@ import { ServiciosModule } from '../servicios/servicios.module';
 import { UsuariosModule } from '../usuarios/usuarios.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([TurnosEntity]), ServiciosModule, UsuariosModule],
+  imports: [
+    TypeOrmModule.forFeature([TurnosEntity]),
+    ServiciosModule,
+    UsuariosModule,
+  ],
   controllers: [TurnosController],
   providers: [TurnosService],
 })
-export class TurnosModule { }
+export class TurnosModule {}
