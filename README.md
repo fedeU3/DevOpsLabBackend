@@ -151,6 +151,34 @@ Se conecta por SSH al VPS, copia [`compose.yml`](compose.yml) y el `.env` del am
 
 Para pedir aprobación manual antes de desplegar a producción: Settings → Environments → `production` → **Required reviewers**.
 
+### Claves SSH
+
+Hay dos tipos de clave, con usos distintos:
+
+- **Clave del deploy:** la usa GitHub Actions. Se genera **una sola vez**: la privada va al secreto `VPS_SSH_KEY` y la pública al VPS.
+- **Claves personales:** una **por cada máquina** desde la que se entra al VPS. No se copian claves privadas entre máquinas: si se pierde una, se borra solo su línea de `authorized_keys`.
+
+Generar un par de claves (sin passphrase para la del deploy, con passphrase para las personales):
+
+```bash
+ssh-keygen -t ed25519 -f ~/.ssh/<nombre> -C "<descripcion>"
+cat ~/.ssh/<nombre>.pub    # clave pública: la que se copia al VPS
+```
+
+Autorizar una clave pública nueva en el VPS, desde una máquina que ya tiene acceso:
+
+```bash
+ssh-copy-id -i ~/.ssh/<nombre>.pub <usuario>@<IP_DEL_VPS>
+```
+
+O, ya dentro del VPS, agregar la línea de la clave pública al final de `~/.ssh/authorized_keys`.
+
+Valor del secreto `VPS_KNOWN_HOSTS`:
+
+```bash
+ssh-keyscan <IP_DEL_VPS>
+```
+
 ## Licencia
 
 Privado — UNLICENSED.
