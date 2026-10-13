@@ -183,7 +183,14 @@ for R in $BACK $FRONT; do
 done
 ```
 
-💻 Secretos del VPS (los mismos en los dos repos):
+💻 Secretos del VPS (los mismos en los dos repos). Primero verificar que `$IP` esté definida y que el VPS responda; tienen que salir 2 o 3 líneas:
+
+```bash
+echo "IP=$IP"
+ssh-keyscan $IP 2>/dev/null
+```
+
+Si alguna de las dos sale vacía, no seguir: definir `IP=...` o esperar a que el VPS termine de arrancar.
 
 ```bash
 for R in $BACK $FRONT; do
@@ -390,7 +397,11 @@ ssh-copy-id -i <clave>.pub root@$IP     # autorizar otra clave
 | `Could not resolve hostname :` | Faltan `VPS_HOST`/`VPS_USER` en el environment (paso 8) |
 | `Load key ...: error in libcrypto` | `VPS_SSH_KEY` mal cargada: `gh secret set VPS_SSH_KEY --env staging -R <repo> < $KEY` |
 | `Permission denied (publickey,password)` | La clave pública no está en el VPS: `ssh-copy-id` (paso 6) |
+| `Host key verification failed` | `VPS_KNOWN_HOSTS` es de otro VPS (o quedó vacío) en ese repo. Revisar que `ssh-keyscan $IP` devuelva líneas y volver a cargarlo en **los dos** repos: `ssh-keyscan $IP 2>/dev/null \| gh secret set VPS_KNOWN_HOSTS --env staging -R <repo>` |
 | Deploy del frontend falla | Desplegar primero el backend, después `gh run rerun <RUN_ID> --failed` |
+| `no configuration file provided: not found` (frontend) | El backend todavía no se desplegó en ese VPS (falta `compose.yml`). Desplegar el backend y después re-run del frontend |
+| `connect to host ... port 22: Connection timed out` | `VPS_HOST` apunta a un VPS que ya no existe (o se destruyó y se creó otro). Actualizar `VPS_HOST` y `VPS_KNOWN_HOSTS` en **los dos** repos. Un re-run usa los secretos del momento en que arrancó |
+| `failed commit on ref "attestation-sha256:..."` | Los deploys de backend y frontend corrieron al mismo tiempo y se pisaron en el VPS. Esperar a que termine uno y hacer re-run del otro |
 
 Para ver el error exacto de cualquier run: `gh run view <RUN_ID> -R <repo> --log-failed`.
 
